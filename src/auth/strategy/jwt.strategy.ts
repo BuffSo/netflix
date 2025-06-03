@@ -5,6 +5,14 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 
 export class JwtAuthGuard extends AuthGuard('jwt') {}
 
+export interface JwtPayload {
+  sub: number;
+  role: number;
+  type: 'access' | 'refresh';
+  iat?: number;
+  exp?: number;
+}
+
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private readonly configService: ConfigService) {
@@ -16,7 +24,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  validate(payload: any) {
-    return payload;
+  validate(payload: JwtPayload) {
+    return {
+      userId: payload.sub,
+      role: payload.role,
+    };
   }
 }
