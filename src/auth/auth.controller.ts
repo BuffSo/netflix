@@ -28,14 +28,22 @@ export class AuthController {
     return this.authService.login(token);
   }
 
+  //@Post('token/access')
+  // async rotateAccessToken(@Headers('authorization') token: string) {
+  //   const payload = await this.authService.parseBearerToken(token, true);
+  //   return {
+  //     accessToken: await this.authService.issueToken(
+  //       { id: payload.sub, role: payload.role },
+  //       false,
+  //     ),
+  //   };
+  // }
+
+  /// bearer token middleware 사용한 경우
   @Post('token/access')
-  async rotateAccessToken(@Headers('authorization') token: string) {
-    const payload = await this.authService.parseBearerToken(token, true);
+  async rotateAccessToken(@Request() req: RequestWithUser) {
     return {
-      accessToken: await this.authService.issueToken(
-        { id: payload.sub, role: payload.role },
-        false,
-      ),
+      accessToken: await this.authService.issueToken(req.user, false),
     };
   }
 
