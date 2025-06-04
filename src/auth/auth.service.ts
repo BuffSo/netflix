@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Role, User } from 'src/user/entities/user.entity';
 import { Repository } from 'typeorm';
@@ -6,6 +10,7 @@ import * as bcrypt from 'bcryptjs';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { JwtPayload } from './strategy/jwt.strategy';
+import { envVariableKeys } from 'src/common/const/env.const';
 
 @Injectable()
 export class AuthService {
@@ -63,21 +68,30 @@ export class AuthService {
       throw new BadRequestException('토큰 포맷이 잘못됐습니다!');
     }
 
-    const payload: JwtPayload = await this.jwtService.verifyAsync(token, {
-      secret: this.configService.get<string>('REFRESH_TOKEN_SECRET'),
-    });
+    try {
+      const payload: JwtPayload = await this.jwtService.verifyAsync(token, {
+        secret: this.configService.get<string>(
+          envVariableKeys.refreshTokenSecret,
+        ),
+      });
+      if (isRefreshToken) {
+        if (payload.type !== 'refresh') {
+          throw new BadRequestException('Refresh 토큰을 입력해 주세요');
+        }
+      } else {
+        if (payload.type !== 'access') {
+          throw new BadRequestException('Access 토큰을 입력해 주세요');
+        }
+      }
 
-    if (isRefreshToken) {
-      if (payload.type !== 'refresh') {
-        throw new BadRequestException('Refresh 토큰을 입력해 주세요');
+      return payload;
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        console.error('JWT verify error:', e.message);
       }
-    } else {
-      if (payload.type !== 'access') {
-        throw new BadRequestException('Access 토큰을 입력해 주세요');
-      }
+
+      throw new UnauthorizedException('토큰이 만료되었습니다!');
     }
-
-    return payload;
   }
 
   ///  rawToken -> "Basic $token"
@@ -94,7 +108,7 @@ export class AuthService {
 
     const hash = await bcrypt.hash(
       password,
-      this.configService.get<number>('HASH_ROUNDS') ?? 10,
+      this.configService.get<number>(envVariableKeys.hashRounds) ?? 10,
     );
 
     await this.userRepository.save({
@@ -125,10 +139,10 @@ export class AuthService {
 
   async issueToken(user: { id: number; role: Role }, isRefreshToken: boolean) {
     const refreshTokenSecret = this.configService.get<string>(
-      'REFRESH_TOKEN_SECRET',
+      envVariableKeys.refreshTokenSecret,
     );
     const accessTokenSecret = this.configService.get<string>(
-      'ACCESS_TOKEN_SECRET',
+      envVariableKeys.accessTokenSecret,
     );
 
     return this.jwtService.signAsync(
