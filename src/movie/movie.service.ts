@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
 import { Movie } from './entity/movie.entity';
@@ -28,6 +32,7 @@ export class MovieService {
   ) {}
 
   async findAll(title?: string) {
+    /// Query Builder
     const qb = this.movieRepository
       .createQueryBuilder('movie')
       .leftJoinAndSelect('movie.director', 'director')
@@ -55,9 +60,10 @@ export class MovieService {
   }
 
   async findOne(id: number) {
+    /// Query Builder
     const movie = await this.movieRepository
       .createQueryBuilder('movie')
-      .leftJoinAndSelect('movie.director', 'direcotr')
+      .leftJoinAndSelect('movie.director', 'director')
       .leftJoinAndSelect('movie.genres', 'genres')
       .leftJoinAndSelect('movie.detail', 'detail')
       .where('movie.id = :id', { id })
@@ -75,6 +81,13 @@ export class MovieService {
   }
 
   async create(createMovieDto: CreateMovieDto) {
+    const existing = await this.movieRepository.findOne({
+      where: { title: createMovieDto.title },
+    });
+
+    if (existing) {
+      throw new BadRequestException('이미 동일한 제목의 영화가 존재합니다.');
+    }
     const director = await this.directorRepository.findOne({
       where: { id: createMovieDto.directorId },
     });
