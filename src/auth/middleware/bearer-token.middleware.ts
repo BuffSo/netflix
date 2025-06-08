@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
+import { JwtService, TokenExpiredError } from '@nestjs/jwt';
 import { NextFunction, Request, Response } from 'express';
 import { envVariableKeys } from 'src/common/const/env.const';
 import { JwtPayload } from '../strategy/jwt.strategy';
@@ -52,9 +52,9 @@ export class BearerTokenMiddleware implements NestMiddleware {
 
       req.user = payload;
       next();
-    } catch (e: unknown) {
-      if (e instanceof Error) {
-        console.error('JWT verify error:', e.message);
+    } catch (e) {
+      if (e instanceof TokenExpiredError) {
+        throw new UnauthorizedException('토큰이 만료되었습니다!');
       }
 
       //throw new UnauthorizedException('토큰이 만료되었습니다!');

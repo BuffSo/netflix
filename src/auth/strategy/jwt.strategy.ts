@@ -2,12 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AuthGuard, PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import { Role } from 'src/user/entities/user.entity';
 
 export class JwtAuthGuard extends AuthGuard('jwt') {}
 
 export interface JwtPayload {
   sub: number;
-  role: number;
+  role: Role;
   type: 'access' | 'refresh';
   iat?: number;
   exp?: number;
