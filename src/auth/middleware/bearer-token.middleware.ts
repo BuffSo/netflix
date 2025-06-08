@@ -25,9 +25,9 @@ export class BearerTokenMiddleware implements NestMiddleware {
       return;
     }
 
-    const token = this.validateBearerToken(authHeader);
-
     try {
+      const token = this.validateBearerToken(authHeader);
+
       const decoded: JwtPayload = this.jwtService.decode(token);
       if (!decoded || typeof decoded !== 'object' || !('type' in decoded)) {
         throw new UnauthorizedException('유효하지 않은 토큰입니다!');
@@ -57,7 +57,9 @@ export class BearerTokenMiddleware implements NestMiddleware {
         console.error('JWT verify error:', e.message);
       }
 
-      throw new UnauthorizedException('토큰이 만료되었습니다!');
+      //throw new UnauthorizedException('토큰이 만료되었습니다!');
+      /// Guard 에서 토큰검증을 했기 때문에 여기서는 next() 로 넘겨주는 것으로 변경(PUblic() 인 경우 토큰 검증 안하도록)
+      next();
     }
   }
 
