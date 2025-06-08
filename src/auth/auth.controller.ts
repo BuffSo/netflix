@@ -11,17 +11,20 @@ import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './strategy/local.strategy';
 import { RequestWithUser } from 'src/common/interfaces/request-with-user.interface';
 import { JwtAuthGuard } from './strategy/jwt.strategy';
+import { Public } from './decorator/public.decorator';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
   @Post('register')
   /// authorization: Basic $token
   registerUser(@Headers('authorization') token: string) {
     return this.authService.register(token);
   }
 
+  @Public()
   @Post('login')
   /// authorization: Basic $token
   loginUser(@Headers('authorization') token: string) {

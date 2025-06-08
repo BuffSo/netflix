@@ -38,7 +38,7 @@ export class MovieController {
   }
 
   @Post()
-  @UseGuards(AuthGuard)
+  //@UseGuards(AuthGuard)
   postMovie(@Body() body: CreateMovieDto) {
     return this.movieService.create(body);
   }
