@@ -11,6 +11,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { MovieDetail } from './entity/movie-detail.entity';
 import { Director } from 'src/director/entity/director.entity';
 import { Genre } from 'src/genre/entities/genre.entity';
+import { GetMoviesDto } from './dto/get-movies.dto';
 
 // export interface Movie {
 //   id: number;
@@ -31,7 +32,8 @@ export class MovieService {
     private readonly genreRepository: Repository<Genre>,
   ) {}
 
-  async findAll(title?: string) {
+  async findAll(dto: GetMoviesDto) {
+    const { title, take, page } = dto;
     /// Query Builder
     const qb = this.movieRepository
       .createQueryBuilder('movie')
@@ -42,21 +44,14 @@ export class MovieService {
       qb.where('movie.title LIKE :title', { title: `%${title}%` });
     }
 
+    if (take && page) {
+      const skip = (page - 1) * take;
+
+      qb.take(take);
+      qb.skip(skip);
+    }
+
     return await qb.getManyAndCount();
-
-    // if (!title) {
-    //   return [
-    //     await this.movieRepository.find({ relations: ['director', 'genres'] }),
-    //     await this.movieRepository.count(),
-    //   ];
-    // }
-
-    // return this.movieRepository.findAndCount({
-    //   where: {
-    //     title: Like(`%${title}%`),
-    //   },
-    //   relations: ['director', 'genres'],
-    // });
   }
 
   async findOne(id: number) {
