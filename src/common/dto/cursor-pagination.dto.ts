@@ -1,4 +1,5 @@
-import { IsArray, IsIn, IsInt, IsOptional, IsString } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsArray, IsInt, IsOptional, IsString } from 'class-validator';
 
 export class CursorPaginationDto {
   @IsString()
@@ -11,6 +12,9 @@ export class CursorPaginationDto {
   @IsOptional()
   // id_ASC id_DESC
   // [id_DESC, likeCount_DESC]
+  @Transform(({ value }) =>
+    Array.isArray(value) ? (value as string[]) : [value as string],
+  )
   order: string[] = ['id_DESC'];
 
   @IsInt()
