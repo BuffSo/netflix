@@ -35,8 +35,8 @@ export class MovieService {
   ) {}
 
   async findAll(dto: GetMoviesDto) {
-    //const { title, take, page } = dto;
     const { title } = dto;
+
     /// Query Builder
     const qb = this.movieRepository
       .createQueryBuilder('movie')
@@ -106,16 +106,53 @@ export class MovieService {
       );
     }
 
-    const movie = await this.movieRepository.save({
-      title: createMovieDto.title,
-      detail: {
+    const movieDetail = await this.movieDetailRepository
+      .createQueryBuilder()
+      .insert()
+      .into(MovieDetail)
+      .values({
         detail: createMovieDto.detail,
-      },
-      director,
-      genres,
-    });
+      })
+      .execute();
 
-    return movie;
+    const movieDetailId = movieDetail.identifiers[0].id;
+
+    const movie = await this.movieRepository
+      .createQueryBuilder()
+      .insert()
+      .into(Movie)
+      .values({
+        title: createMovieDto.title,
+        detail: {
+          id: movieDetailId,
+        },
+        director,
+      })
+      .execute();
+
+    const movieId = movie.identifiers[0].id;
+
+    await this.movieRepository
+      .createQueryBuilder()
+      .relation(Movie, 'genres')
+      .of(movieId)
+      .add(genres.map((genre) => genre.id));
+
+    // const movie = await this.movieRepository.save({
+    //   title: createMovieDto.title,
+    //   detail: {
+    //     detail: createMovieDto.detail,
+    //   },
+    //   director,
+    //   genres,
+    // });
+
+    return await this.movieRepository.findOne({
+      where: {
+        id: movieId,
+      },
+      relations: ['detail', 'director', 'genres'],
+    });
   }
 
   async update(id: number, updateMovieDto: UpdateMovieDto) {
