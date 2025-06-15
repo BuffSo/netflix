@@ -16,13 +16,13 @@ export class GenreService {
     private readonly genreRepository: Repository<Genre>,
   ) {}
   async create(createGenreDto: CreateGenreDto) {
-    const genre = await this.genreRepository.findOne({
-      where: { name: createGenreDto.name },
-    });
+    // const genre = await this.genreRepository.findOne({
+    //   where: { name: createGenreDto.name },
+    // });
 
-    if (genre) {
-      throw new BadRequestException('이미 존재하는 장르입니다!');
-    }
+    // if (genre) {
+    //   throw new BadRequestException('이미 존재하는 장르입니다!');
+    // }
 
     return this.genreRepository.save(createGenreDto);
   }
